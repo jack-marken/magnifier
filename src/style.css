@@ -1,0 +1,17 @@
+html,body {
+  height:100%;
+  margin:0;
+  background:#111;
+  color:#ddd;
+  font-family:system-ui,Arial;
+}
+
+#ui{
+	position:absolute;
+	left:12px;
+	top:12px;
+	background:rgba(0,0,0,0.4);
+	padding:8px;
+	border-radius:8px;
+	font-size:1.2em;
+}
