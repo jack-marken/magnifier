@@ -111,7 +111,7 @@ export default {
     }
     SetUniforms()
 
-    const vert = `
+    const vertexShader = `
 uniform vec2 uResolution;
 varying vec2 vWorld;
 void main(){
@@ -121,7 +121,7 @@ void main(){
 	gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `
-    const frag = `
+    const fragmentShader = `
 uniform sampler2D uTexture;
 uniform vec2 uResolution;
 uniform vec2 uCenter;
@@ -148,8 +148,8 @@ void main(){
     let shaderMat = new THREE.ShaderMaterial({
       uniforms: uniforms,
 
-      vertexShader: vert,
-      fragmentShader: frag,
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
 
       transparent: true,
       depthTest: false,
@@ -185,6 +185,9 @@ void main(){
     rebuildMagnifier(W() / 2, H() / 2)
 
     // ============================
+    // USER INTERACTION
+    // ============================
+
     let mouseX = 0
     let mouseY = 0
     let glassEffect = true
@@ -194,10 +197,13 @@ void main(){
       mouseY = e.clientY
 
       if (glassEffect) {
+        // Another glass effect
+        // -----------------------
         // uniforms.uCenter.value.set(
         //   (mouseX / W()) * canvas.width,
         //   (1 - mouseY / H()) * canvas.height
         // )
+        // -----------------------
         uniforms.uCenter.value.set(mouseX, mouseY)
       } else {
         uniforms.uCenter.value.set(W() / 2, H() / 2)
@@ -269,12 +275,17 @@ void main(){
       { passive: false }
     )
 
+    // ============================
+    // RENDER PAGE
+    // ============================
+
     function animate() {
       requestAnimationFrame(animate)
       renderer.render(scene, camera)
     }
     animate()
 
+    // Log errors
     window.__demo = { uniforms, rebuildMagnifier }
   },
 }
