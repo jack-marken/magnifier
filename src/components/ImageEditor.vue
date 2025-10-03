@@ -9,7 +9,7 @@
     Change zoom mode: left-mouse click<br />
     Reset: R<br />
     <label for="file-input" class="upload-button">Upload Image (JPG/PNG)</label>
-    <input type="file" id="file-input" hidden @change="handleFileSelect" />
+    <input type="file" id="file-input" hidden @change="handleImageUpload" />
   </div>
 </template>
 
@@ -79,7 +79,7 @@ export default {
     // ============================
 
     const ctx = canvas.getContext('2d')
-    function drawText() {
+    const drawCanvas = () => {
       const w = canvas.width,
         h = canvas.height
 
@@ -96,24 +96,23 @@ export default {
       ctx.font = `300 ${fontSize * 0.7}px system-ui, Arial`
       ctx.fillText('move your mouse + scroll to zoom', w / 2, h / 2 + 30)
 
-      // const reader = new FileReader()
-      // reader.onload = (e) => {
-      //   const img = new Image()
-      //   img.onload = () => {
-      //     const ctx = canvas.value.getContext('2d')
-
-      //     // Resize canvas to match image
-      //     canvas.value.width = img.width
-      //     canvas.value.height = img.height
-
-      //     ctx.drawImage(img, 0, 0)
-      //   }
-      //   img.src = e.target.result
-      // }
-      // reader.readAsDataURL(this.uploadedImgUrl)
+      if (this.uploadedImgUrl !== null) {
+        const reader = new FileReader()
+        reader.onload = () => {
+          // reader.onload = (e) => {
+          // const img = new Image()
+          // img.onload = () => {
+          //   ctx.drawImage(img, 0, 0)
+          // }
+          // img.src = e.target.result
+        }
+        reader.readAsDataURL(this.uploadedImgUrl)
+        ctx.fillText('THIS IS WORKING', w / 2, h / 2 + 60)
+      }
     }
 
-    drawText()
+    drawCanvas()
+
     let canvasTexture = new THREE.CanvasTexture(canvas)
     canvasTexture.minFilter = THREE.LinearFilter
     canvasTexture.magFilter = THREE.LinearFilter
@@ -269,7 +268,7 @@ export default {
       canvas.width = W()
       canvas.height = H()
       mesh.position.set(W() / 2, H() / 2, 0)
-      drawText()
+      drawCanvas()
       SetUniforms()
       rebuildMagnifier(W() / 2, H() / 2)
     })
