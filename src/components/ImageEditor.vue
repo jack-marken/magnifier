@@ -7,7 +7,9 @@
     Decrease edges: &lt;<br />
     Increase edges: &gt;<br />
     Change zoom mode: left-mouse click<br />
-    Reset: R
+    Reset: R<br />
+    <label for="file-input" class="upload-button">Upload Image (JPG/PNG)</label>
+    <input type="file" id="file-input" hidden @change="handleFileSelect" />
   </div>
 </template>
 
@@ -15,12 +17,42 @@
 canvas {
   z-index: 100;
 }
+
+.upload-button {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #555;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
 </style>
 
 <script>
 import * as THREE from 'three'
+import fragmentShader from '@/assets/webgl/shaders/magnifyFragmentShader.frag?raw'
+import vertexShader from '@/assets/webgl/shaders/magnifyVertexShader.vert?raw'
 
 export default {
+  data() {
+    return {
+      uploadedImgUrl: null,
+    }
+  },
+  methods: {
+    handleImageUpload(event) {
+      const file = event.target.files[0]
+      if (!file) return
+      // Check type again (extra safety)
+      if (!['image/jpeg', 'image/png'].includes(file.type)) {
+        alert('Only JPG and PNG are allowed.')
+        return
+      }
+
+      this.uploadedImgUrl = file
+    },
+  },
   mounted() {
     const container = document.getElementById('threeContainer')
     const W = () => window.innerWidth
@@ -63,6 +95,22 @@ export default {
 
       ctx.font = `300 ${fontSize * 0.7}px system-ui, Arial`
       ctx.fillText('move your mouse + scroll to zoom', w / 2, h / 2 + 30)
+
+      // const reader = new FileReader()
+      // reader.onload = (e) => {
+      //   const img = new Image()
+      //   img.onload = () => {
+      //     const ctx = canvas.value.getContext('2d')
+
+      //     // Resize canvas to match image
+      //     canvas.value.width = img.width
+      //     canvas.value.height = img.height
+
+      //     ctx.drawImage(img, 0, 0)
+      //   }
+      //   img.src = e.target.result
+      // }
+      // reader.readAsDataURL(this.uploadedImgUrl)
     }
 
     drawText()
@@ -110,40 +158,6 @@ export default {
       uniforms.uFeather = { value: 0.08 }
     }
     SetUniforms()
-
-    const vertexShader = `
-uniform vec2 uResolution;
-varying vec2 vWorld;
-void main(){
-	// position is in local mesh coords; compute world position in pixels
-	vec4 worldPos = modelMatrix * vec4(position, 1.0);
-	vWorld = worldPos.xy;
-	gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-`
-    const fragmentShader = `
-uniform sampler2D uTexture;
-uniform vec2 uResolution;
-uniform vec2 uCenter;
-uniform float uZoom;
-uniform float uFeather;
-varying vec2 vWorld;
-
-void main(){
-	vec2 uv = vWorld / uResolution;
-	vec2 cUV = uCenter / uResolution;
-	vec2 delta = uv - cUV;
-	vec2 sampleUV = cUV + delta / uZoom;
-	// sample magnified
-	vec4 mag = texture2D(uTexture, sampleUV);
-	// sample original
-	vec4 orig = texture2D(uTexture, uv);
-	// simple smooth edge based on distance to center (normalized)
-	float dist = length(delta) / (max(uResolution.x, uResolution.y));
-	float edge = smoothstep(uFeather, 0.0, dist);
-	gl_FragColor = mix(orig, mag, edge);
-}
-`
 
     let shaderMat = new THREE.ShaderMaterial({
       uniforms: uniforms,
